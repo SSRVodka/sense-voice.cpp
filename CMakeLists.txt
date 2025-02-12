@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
-project(SenseVoice.cpp VERSION 1.4.0 LANGUAGES CXX)
+project(sense-voice.cpp)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE STRING "")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE STRING "")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE STRING "")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib CACHE STRING "")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib CACHE STRING "")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin CACHE STRING "")
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -52,7 +52,7 @@ option(SENSE_VOICE_SANITIZE_ADDRESS   "sense-voice: enable address sanitizer"   
 option(SENSE_VOICE_SANITIZE_UNDEFINED "sense-voice: enable undefined sanitizer" OFF)
 
 # extra artifacts
-option(SENSE_VOICE_BUILD_EXAMPLES "whisper: build examples"       ON)
+option(SENSE_VOICE_BUILD_EXAMPLES "whisper: build examples"       OFF)
 
 # build
 option(SENSE_VOICE_FATAL_WARNINGS "sense-voice: enable -Werror flag" OFF)
@@ -70,26 +70,19 @@ set(GGML_SANITIZE_UNDEFINED ${SENSE_VOICE_SANITIZE_UNDEFINED})
 set(GGML_ALL_WARNINGS       ${SENSE_VOICE_ALL_WARNINGS})
 set(GGML_FATAL_WARNINGS     ${SENSE_VOICE_FATAL_WARNINGS})
 
-# Required for relocatable CMake package
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build-info.cmake)
-
 
 if(GGML_USE_BLAS)
     add_definitions(-DGGML_USE_BLAS)
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/sense-voice/csrc/third-party/ggml/include/ggml ${PROJECT_SOURCE_DIR}/sense-voice/csrc/third-party/ggml/src)
-add_subdirectory(sense-voice/csrc/third-party/ggml)
-
+include_directories(
+    ${PROJECT_SOURCE_DIR}/sense-voice/third-party/ggml/include/ggml
+    ${PROJECT_SOURCE_DIR}/sense-voice/third-party/ggml/src
+)
 add_subdirectory(sense-voice)
 
 if (SENSEVOICE_BUILD_TESTS)
     message(DEBUG "Test scripts")
 #    add_subdirectory(test)
 endif ()
-
-if (SENSE_VOICE_BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif()
-
 
