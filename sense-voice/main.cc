@@ -1,7 +1,7 @@
 
-#include "asr.hpp"
+#include "asr_handler.hpp"
 
 int main(int argc, char **argv) {
-    ASRServer server;
+    ASRHandler server;
     return server.cli_main(argc, argv);
 }
