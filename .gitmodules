@@ -1,3 +1,7 @@
 [submodule "sense-voice/third-party/ggml"]
 	path = sense-voice/third-party/ggml
 	url = https://github.com/ggerganov/ggml.git
+[submodule "sense-voice/third-party/pybind11"]
+	path = sense-voice/third-party/pybind11
+	url = https://github.com/pybind/pybind11
+	branch = stable

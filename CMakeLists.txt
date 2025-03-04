@@ -86,3 +86,9 @@ if (SENSEVOICE_BUILD_TESTS)
 #    add_subdirectory(test)
 endif ()
 
+
+# SSRVodka: Support Pybind11
+option(BUILD_PYBIND11 "sense voice: support pybind11" OFF)
+if (BUILD_PYBIND11)
+    set(BUILD_SHARED_LIBS ON)
+endif(BUILD_PYBIND11)

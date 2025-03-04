@@ -1,0 +1,44 @@
+{% set version = "1.0.0" %}
+
+package:
+  name: asr_module
+  version: {{ version }}
+
+source:
+  path: .
+
+build:
+  number: 0
+  # using {{ PYTHON }} here to avoid the system interpreter
+  script:
+    - "{{ PYTHON }} setup.py install --single-version-externally-managed --record=record.txt"
+  skip: False
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - python
+    - pybind11
+    - setuptools
+    - cmake
+  host:
+    - python
+    - pybind11
+    - pip
+  run:
+    - python
+    - pybind11
+
+test:
+  imports:
+    - asr_module
+
+about:
+  home: https://github.com/SSRVodka
+  license: MIT
+  summary: Python bindings for ASRHandler C++ library
+  description: |
+    This package provides Python bindings for the ASRHandler C++ library using pybind11.
+  doc_url: https://github.com/SSRVodka
+  dev_url: https://github.com/SSRVodka
