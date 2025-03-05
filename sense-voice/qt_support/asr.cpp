@@ -596,7 +596,7 @@ int ASRServer::cli_main(int argc, char **argv) {
                                 fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                                 return 10;
                             }
-                            printf(sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false).c_str());
+                            printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
                             current_speech_end = current_speech_start = 0;
                             if (next_start < prev_end) {
                                 triggered = false;
@@ -610,7 +610,7 @@ int ASRServer::cli_main(int argc, char **argv) {
                                 fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                                 return 10;
                             }
-                            printf(sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false).c_str());
+                            printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
                             current_speech_end = current_speech_start = 0;
                             prev_end = next_start = temp_end = 0;
 
@@ -645,7 +645,7 @@ int ASRServer::cli_main(int argc, char **argv) {
                                     fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                                     return 10;
                                 }
-                                printf(sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false).c_str());
+                                printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
                                 current_speech_end = current_speech_start = 0;
                             }
                             prev_end = next_start = temp_end = 0;
@@ -666,7 +666,7 @@ int ASRServer::cli_main(int argc, char **argv) {
                     fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                     return 10;
                 }
-                printf(sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false).c_str());
+                printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
             }
         }
         SENSE_VOICE_LOG_INFO("\n%s: decoder audio use %f s, rtf is %f. \n\n",
@@ -882,7 +882,7 @@ ASRServer::asr_result ASRServer::handle(
                                 error("failed to process audio");
                                 return {INVALID_ID, ""};
                             }
-                            tmp_resline = sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false);
+                            tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
                             emit output_append(currentId, QString(tmp_resline.c_str()));
                             result << tmp_resline;
                             current_speech_end = current_speech_start = 0;
@@ -898,7 +898,7 @@ ASRServer::asr_result ASRServer::handle(
                                 error("failed to process audio");
                                 return {INVALID_ID, ""};
                             }
-                            tmp_resline = sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false);
+                            tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
                             emit output_append(currentId, QString(tmp_resline.c_str()));
                             result << tmp_resline;
                             current_speech_end = current_speech_start = 0;
@@ -936,7 +936,7 @@ ASRServer::asr_result ASRServer::handle(
                                     error("failed to process audio");
                                     return {INVALID_ID, ""};
                                 }
-                                tmp_resline = sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false);
+                                tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
                                 emit output_append(currentId, QString(tmp_resline.c_str()));
                                 result << tmp_resline;
                                 current_speech_end = current_speech_start = 0;
@@ -960,7 +960,7 @@ ASRServer::asr_result ASRServer::handle(
                     error("failed to process audio");
                     return {INVALID_ID, ""};
                 }
-                tmp_resline = sense_voice_print_output(ctx, params.need_prefix, params.use_itn, false);
+                tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
                 emit output_append(currentId, QString(tmp_resline.c_str()));
                 result << tmp_resline;
             }
