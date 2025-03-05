@@ -34,9 +34,6 @@ static int sense_voice_has_openvino(void) {
 }
 
 
-void asr_handler_nop(ASRHandler::task_id_t, std::string) {}
-
-
 ASRHandler::asr_params::asr_params():
     n_threads(std::min(4, (int32_t) std::thread::hardware_concurrency())),
     n_processors(1),
@@ -101,15 +98,32 @@ ASRHandler::asr_result::asr_result(task_id_t id, std::string txt):
     request_id(id),
     text(txt) {}
 
+void ASRHandler::on_line_append_default_callback(task_id_t id, std::string raw) {
+    // do nothing
+}
+
 ASRHandler::ASRHandler():
     currentId(INVALID_ID),
     currentResult(),
-    on_line_append(asr_handler_nop) {}
+    callback_wrapper() {
+    callback_wrapper.bind_instance = true;
+    callback_wrapper._on_line_append_callback.in_class
+        = &ASRHandler::on_line_append_default_callback;
+}
 
 ASRHandler::~ASRHandler() {}
 
 void ASRHandler::register_on_line_append(void(*callback)(task_id_t, std::string)) {
-    if (callback) this->on_line_append = callback;
+    if (callback) {
+        this->callback_wrapper.bind_instance = false;
+        this->callback_wrapper._on_line_append_callback.primary = callback;
+    }
+}
+void ASRHandler::register_on_line_append(void (ASRHandler::*callback)(task_id_t, std::string)) {
+    if (callback) {
+        this->callback_wrapper.bind_instance = true;
+        this->callback_wrapper._on_line_append_callback.in_class = callback;
+    }
 }
 
 const char *ASRHandler::print_system_info() {
@@ -891,7 +905,7 @@ ASRHandler::asr_result ASRHandler::handle(
                                 return {INVALID_ID, ""};
                             }
                             tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
-                            this->on_line_append(currentId, tmp_resline);
+                            this->_execute_on_line_append_callback(currentId, tmp_resline);
                             result << tmp_resline;
                             current_speech_end = current_speech_start = 0;
                             if (next_start < prev_end) {
@@ -907,7 +921,7 @@ ASRHandler::asr_result ASRHandler::handle(
                                 return {INVALID_ID, ""};
                             }
                             tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
-                            this->on_line_append(currentId, tmp_resline);
+                            this->_execute_on_line_append_callback(currentId, tmp_resline);
                             result << tmp_resline;
                             current_speech_end = current_speech_start = 0;
                             prev_end = next_start = temp_end = 0;
@@ -945,7 +959,7 @@ ASRHandler::asr_result ASRHandler::handle(
                                     return {INVALID_ID, ""};
                                 }
                                 tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
-                                this->on_line_append(currentId, tmp_resline);
+                                this->_execute_on_line_append_callback(currentId, tmp_resline);
                                 result << tmp_resline;
                                 current_speech_end = current_speech_start = 0;
                             }
@@ -969,7 +983,7 @@ ASRHandler::asr_result ASRHandler::handle(
                     return {INVALID_ID, ""};
                 }
                 tmp_resline = sense_voice_print_output(ctx, params.need_prefix, false);
-                this->on_line_append(currentId, tmp_resline);
+                this->_execute_on_line_append_callback(currentId, tmp_resline);
                 result << tmp_resline;
             }
         }
@@ -984,3 +998,16 @@ ASRHandler::asr_result ASRHandler::handle(
     this->currentResult.text = result.str();
     return currentResult;
 }
+
+
+#ifdef USE_QT5
+
+ASRServer::ASRServer(): ASRHandler() {}
+
+ASRServer::~ASRServer() {}
+
+void ASRServer::on_line_append_default_callback(task_id_t id, std::string raw) {
+    emit output_append(id, QString(raw.c_str()));
+}
+
+#endif

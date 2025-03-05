@@ -40,12 +40,15 @@ target_link_libraries(${PROJ_LIB_NAME} ggml)
 # Build library for Qt
 if (USE_QT)
     svcore_qt_build()
+    # Add macro for compilation
+    add_compile_definitions(USE_QT5)
 endif(USE_QT)
 
 # Build pybind11 library
 if (BUILD_PYBIND11)
     include(${PROJECT_SOURCE_DIR}/cmake/pybind11.cmake)
     pybind11_build()
+    add_compile_definitions(USE_PYBIND11)
 endif(BUILD_PYBIND11)
 
 # CLI Demo

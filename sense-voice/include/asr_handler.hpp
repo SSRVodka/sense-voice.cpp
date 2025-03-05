@@ -7,6 +7,13 @@
 #include <string>
 #include <vector>
 
+#ifdef USE_QT5
+#ifdef USE_PYBIND11
+#error "Qt signal + Python bindings (PyQt) haven't supported yet"
+#endif
+#include <QtCore/QObject>
+#endif
+
 
 class ASRHandler {
 public:
@@ -100,7 +107,7 @@ public:
     };
 
     ASRHandler();
-    ~ASRHandler();
+    virtual ~ASRHandler();
 
     // sync op
     asr_result handle(
@@ -116,12 +123,43 @@ public:
     static void print_usage(int /*argc*/, char **argv, const asr_params &params);
 
     void register_on_line_append(void(*callback)(task_id_t, std::string));
+    void register_on_line_append(void (ASRHandler::*callback)(task_id_t, std::string));
 
 protected:
+    // default on_line_append callback implementation
+    virtual void on_line_append_default_callback(task_id_t id, std::string raw);
+
     static char *param_turn_lowercase(char *in);
-private:
+
     task_id_t currentId;
     asr_result currentResult;
 
-    void(*on_line_append)(task_id_t, std::string);
+    struct CallbackWrapper {
+        union OnLineAppendCallback {
+            void(*primary)(task_id_t, std::string);
+            void(ASRHandler::*in_class)(task_id_t, std::string);
+        } _on_line_append_callback;
+        bool bind_instance;
+    } callback_wrapper;
+private:
+    inline void _execute_on_line_append_callback(task_id_t id, std::string raw) {
+        if (this->callback_wrapper.bind_instance)
+            (this->*(this->callback_wrapper._on_line_append_callback.in_class))(id, raw);
+        else this->callback_wrapper._on_line_append_callback.primary(id, raw);
+    }
 };
+
+#ifdef USE_QT5
+class ASRServer: public QObject, public ASRHandler {
+    Q_OBJECT
+public:
+
+    ASRServer();
+    ~ASRServer();
+protected:
+    void on_line_append_default_callback(task_id_t id, std::string raw) override;
+signals:
+    // performance loss!
+    void output_append(task_id_t, QString);
+};
+#endif
