@@ -12,6 +12,7 @@
 #error "Qt signal + Python bindings (PyQt) haven't supported yet"
 #endif
 #include <QtCore/QObject>
+#include <QtCore/QMetaType>
 #endif
 
 
@@ -88,6 +89,7 @@ public:
 
         // default constructor
         asr_params();
+        asr_params(const asr_params&) = default;
     };
 
     struct asr_print_user_data {
@@ -104,6 +106,7 @@ public:
         // default constructor
         asr_result();
         asr_result(task_id_t, std::string);
+        asr_result(const asr_result&) = default;
     };
 
     ASRHandler();
@@ -150,7 +153,12 @@ private:
 };
 
 #ifdef USE_QT5
-class ASRServer: public QObject, public ASRHandler {
+#if defined(ASRLIB_EXPORT)
+    #define ASRCLASS_EXPORT Q_DECL_EXPORT
+#else
+    #define ASRCLASS_EXPORT Q_DECL_IMPORT
+#endif
+class ASRCLASS_EXPORT ASRServer: public QObject, public ASRHandler {
     Q_OBJECT
 public:
 
@@ -162,4 +170,6 @@ signals:
     // performance loss!
     void output_append(task_id_t, QString);
 };
+Q_DECLARE_METATYPE(ASRHandler::asr_params);
+Q_DECLARE_METATYPE(ASRHandler::asr_result);
 #endif

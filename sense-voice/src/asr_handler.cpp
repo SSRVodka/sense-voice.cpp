@@ -33,6 +33,9 @@ static int sense_voice_has_openvino(void) {
 #endif
 }
 
+// initialization helper
+ASRHandler _init_handler;
+
 
 ASRHandler::asr_params::asr_params():
     n_threads(std::min(4, (int32_t) std::thread::hardware_concurrency())),
@@ -106,6 +109,12 @@ ASRHandler::ASRHandler():
     currentId(INVALID_ID),
     currentResult(),
     callback_wrapper() {
+    // initialize once
+    static bool once = []{
+        qRegisterMetaType<ASRHandler::asr_params>();
+        qRegisterMetaType<ASRHandler::asr_result>();
+        return true;
+    }();
     callback_wrapper.bind_instance = true;
     callback_wrapper._on_line_append_callback.in_class
         = &ASRHandler::on_line_append_default_callback;
