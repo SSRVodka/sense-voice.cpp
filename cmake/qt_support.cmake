@@ -3,8 +3,11 @@ macro(svcore_qt_build)
 
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 
-# export symbols
+# export symbols (not appear in parent project)
 add_compile_definitions(ASRLIB_EXPORT)
+
+# compile-time macro (to be visible to parent projects)
+target_compile_definitions(${PROJ_LIB_NAME} PUBLIC ASRLIB_USE_QT5=ON)
 
 set(SV_MOC_H ${PROJECT_SOURCE_DIR}/sense-voice/include/asr_handler.hpp)
 

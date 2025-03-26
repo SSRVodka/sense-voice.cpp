@@ -4,6 +4,8 @@ set(PROJ_PYBIND11_LIB_NAME "_asr_module")
 
 add_subdirectory(third-party/pybind11)
 
+# compile-time macro (to be visible to parent projects)
+target_compile_definitions(${PROJ_LIB_NAME} PUBLIC ASRLIB_USE_PYBIND11=ON)
 
 pybind11_add_module(${PROJ_PYBIND11_LIB_NAME} ${PROJECT_SOURCE_DIR}/asr_module/wrapper.cpp)
 target_link_libraries(${PROJ_PYBIND11_LIB_NAME} PUBLIC svcore)

@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#ifdef USE_QT5
-#ifdef USE_PYBIND11
+#ifdef ASRLIB_USE_QT5
+#ifdef ASRLIB_USE_PYBIND11
 #error "Qt signal + Python bindings (PyQt) haven't supported yet"
 #endif
 #include <QtCore/QObject>
@@ -152,7 +152,7 @@ private:
     }
 };
 
-#ifdef USE_QT5
+#ifdef ASRLIB_USE_QT5
 #if defined(ASRLIB_EXPORT)
     #define ASRCLASS_EXPORT Q_DECL_EXPORT
 #else

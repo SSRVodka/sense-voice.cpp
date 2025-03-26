@@ -1009,7 +1009,7 @@ ASRHandler::asr_result ASRHandler::handle(
 }
 
 
-#ifdef USE_QT5
+#ifdef ASRLIB_USE_QT5
 
 ASRServer::ASRServer(): ASRHandler() {}
 
