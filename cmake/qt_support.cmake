@@ -11,7 +11,7 @@ set(SV_MOC_H ${PROJECT_SOURCE_DIR}/sense-voice/include/asr_handler.hpp)
 target_sources(${PROJ_LIB_NAME} PUBLIC ${SV_MOC_H})
 
 set_target_properties(${PROJ_LIB_NAME} PROPERTIES
-    VERSION ${PROJ_LIB_VERSION}_qt5
+    VERSION ${PROJ_LIB_VERSION}.qt5
     SOVERSION ${PROJ_LIB_VERSION}
 )
 

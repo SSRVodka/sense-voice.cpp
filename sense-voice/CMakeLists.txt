@@ -1,5 +1,6 @@
 
 option(USE_QT "sense voice: use Qt Framework or not"      OFF)
+option(BUILD_EXAMPLE_AND_TEST "sense voice: build examples and tests" OFF)
 
 set(PROJ_LIB_NAME svcore)
 set(PROJ_LIB_MAJOR_VERSION 1)
@@ -51,6 +52,9 @@ if (BUILD_PYBIND11)
     add_compile_definitions(USE_PYBIND11)
 endif(BUILD_PYBIND11)
 
+
+if (BUILD_EXAMPLE_AND_TEST)
+
 # CLI Demo
 
 add_executable(sense-voice-cli main.cc)
@@ -64,4 +68,4 @@ add_executable(test-with-cli test/test.cpp)
 target_link_libraries(test-with-cli ${PROJ_LIB_NAME} ggml)
 target_include_directories(test-with-cli PUBLIC include)
 
-
+endif (BUILD_EXAMPLE_AND_TEST)
