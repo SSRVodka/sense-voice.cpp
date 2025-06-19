@@ -184,10 +184,7 @@ void ASRHandler::print_usage(int /*argc*/, char **argv, const asr_params &params
     fprintf(stderr, "  -tdrz,     --tinydiarize       [%-7s] enable tinydiarize (requires a tdrz model)\n",     params.tinydiarize ? "true" : "false");
     fprintf(stderr, "  -nf,       --no-fallback       [%-7s] do not use temperature fallback while decoding\n", params.no_fallback ? "true" : "false");
     fprintf(stderr, "  -otxt,     --output-txt        [%-7s] output result in a text file\n",                   params.output_txt ? "true" : "false");
-    fprintf(stderr, "  -ovtt,     --output-vtt        [%-7s] output result in a vtt file\n",                    params.output_vtt ? "true" : "false");
     fprintf(stderr, "  -osrt,     --output-srt        [%-7s] output result in a srt file\n",                    params.output_srt ? "true" : "false");
-    fprintf(stderr, "  -olrc,     --output-lrc        [%-7s] output result in a lrc file\n",                    params.output_lrc ? "true" : "false");
-    fprintf(stderr, "  -owts,     --output-words      [%-7s] output script for generating karaoke video\n",     params.output_wts ? "true" : "false");
     fprintf(stderr, "  -ocsv,     --output-csv        [%-7s] output result in a CSV file\n",                    params.output_csv ? "true" : "false");
     fprintf(stderr, "  -oj,       --output-json       [%-7s] output result in a JSON file\n",                   params.output_jsn ? "true" : "false");
     fprintf(stderr, "  -ojf,      --output-json-full  [%-7s] include more information in the JSON file\n",      params.output_jsn_full ? "true" : "false");
@@ -211,6 +208,7 @@ void ASRHandler::print_usage(int /*argc*/, char **argv, const asr_params &params
     fprintf(stderr, "  -fa,       --flash-attn        [%-7s] flash attention\n",                                params.flash_attn ? "true" : "false");
     fprintf(stderr, "  -pr,       --need-prefix       [%-7s] need prefix labels in output\n",                   params.need_prefix ? "true" : "false");
     fprintf(stderr, "  -itn,      --use-itn           [%-7s] use itn\n",                                        params.use_itn ? "true" : "false");
+    fprintf(stderr, "  -prefix,      --use-prefix           [%-7s] use itn\n",                                        params.use_itn ? "true" : "false");
     fprintf(stderr, "\n");
 }
 
@@ -606,25 +604,14 @@ int ASRHandler::cli_main(int argc, char **argv) {
 
 
                 {
-                    float speech_prob = 0;
-                    silero_vad_encode_internal(*ctx, *ctx->state, chunk, params.n_threads, speech_prob);
-                    if (speech_prob >= params.threshold && temp_end) {
-                        temp_end = 0;
-                        if(next_start < prev_end) next_start = CHUNK_SIZE * i;
-                    }
-
-                    if (speech_prob >= params.threshold && ! triggered){
-                        triggered = true;
-                        current_speech_start = i;
-                        continue;
-                    }
                     if (triggered && i - current_speech_start > max_speech_samples) {
-                        if (prev_end){
+                        if (prev_end) {
                             current_speech_end = prev_end;
 
                             // find an endpoint in speech
                             speech_segment.clear();
                             speech_segment.assign(pcmf32.begin() + current_speech_start, pcmf32.begin() + current_speech_end);
+                            printf("[%.2f-%.2f] ", current_speech_start / (sample_rate * 1.0), current_speech_end / (sample_rate * 1.0));
                             if (sense_voice_full_parallel(ctx, wparams, speech_segment, speech_segment.size(), params.n_processors) != 0) {
                                 fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                                 return 10;
@@ -633,42 +620,42 @@ int ASRHandler::cli_main(int argc, char **argv) {
                             current_speech_end = current_speech_start = 0;
                             if (next_start < prev_end) {
                                 triggered = false;
-                            }else{
+                            } else {
                                 current_speech_start = next_start;
                             }
-                            // find an endpoint in speech
-                            speech_segment.clear();
-                            speech_segment.assign(pcmf32.begin() + current_speech_start, pcmf32.begin() + current_speech_end);
-                            if (sense_voice_full_parallel(ctx, wparams, speech_segment, speech_segment.size(), params.n_processors) != 0) {
-                                fprintf(stderr, "%s: failed to process audio\n", argv[0]);
-                                return 10;
-                            }
-                            printf("%s", sense_voice_print_output(ctx, params.need_prefix, false).c_str());
-                            current_speech_end = current_speech_start = 0;
-                            prev_end = next_start = temp_end = 0;
-
-                        } else {
-                            current_speech_end = i;
-                            prev_end = next_start = temp_end = 0;
-                            triggered = false;
-                            continue;
-
+                            prev_end = 0;
                         }
                     }
 
-                    if (speech_prob < params.neg_threshold && triggered){
-                        if (temp_end == 0){
+                    float speech_prob = 0;
+                    silero_vad_encode_internal(*ctx, *ctx->state, chunk, params.n_threads, speech_prob);
+                    if (speech_prob >= params.threshold) {
+                        if (temp_end) temp_end = 0;
+                        if (next_start < prev_end) next_start = i;
+                    }
+
+                    if (speech_prob >= params.threshold && !triggered) {
+                        triggered = true;
+                        current_speech_start = i;
+                        continue;
+                    }
+
+                    if (speech_prob < params.neg_threshold && triggered) {
+                        if (temp_end == 0) {
                             temp_end = i;
                         }
 
                         if (i - temp_end > min_silence_samples_at_max_speech) {
                             prev_end = temp_end;
+                        } else {
+                            continue;
                         }
 
-                        if (i - temp_end < min_silence_samples) {
+                        // TODO min_silence_samples -> max_silence_samples
+                        if (i - prev_end < min_silence_samples) {
                             continue;
-                        }else{
-                            current_speech_end = temp_end;
+                        } else {
+                            current_speech_end = prev_end;
                             if (current_speech_end - current_speech_start > min_speech_samples) {
                                 // find an endpoint in speech
                                 speech_segment.clear();
@@ -681,19 +668,22 @@ int ASRHandler::cli_main(int argc, char **argv) {
                                 printf("%s", sense_voice_print_output(ctx, params.need_prefix, false).c_str());
                                 current_speech_end = current_speech_start = 0;
                             }
-                            prev_end = next_start = temp_end = 0;
+                            prev_end = next_start = 0;
                             triggered = false;
                             continue;
                         }
                     }
-
                 }
-
             }
             // last segment speech
-            if (current_speech_start != 0 && current_speech_end != 0 && pcmf32.size() - current_speech_start > min_speech_samples){
+            if (triggered && pcmf32.size() - 1 - current_speech_start > min_speech_samples) {
+                if (temp_end) {
+                    current_speech_end = temp_end;
+                } else {
+                    current_speech_end = pcmf32.size() - 1;
+                }
                 speech_segment.clear();
-                speech_segment.assign(pcmf32.begin() + current_speech_start, pcmf32.begin() + pcmf32.size());
+                speech_segment.assign(pcmf32.begin() + current_speech_start, pcmf32.begin() + current_speech_end);
                 printf("[%.2f-%.2f] ", current_speech_start / (sample_rate * 1.0), current_speech_end / (sample_rate * 1.0));
                 if (sense_voice_full_parallel(ctx, wparams, speech_segment, speech_segment.size(), params.n_processors) != 0) {
                     fprintf(stderr, "%s: failed to process audio\n", argv[0]);
