@@ -109,12 +109,14 @@ ASRHandler::ASRHandler():
     currentId(INVALID_ID),
     currentResult(),
     callback_wrapper() {
+#ifdef ASRLIB_USE_QT5
     // initialize once
     static bool once = []{
         qRegisterMetaType<ASRHandler::asr_params>();
         qRegisterMetaType<ASRHandler::asr_result>();
         return true;
     }();
+#endif
     callback_wrapper.bind_instance = true;
     callback_wrapper._on_line_append_callback.in_class
         = &ASRHandler::on_line_append_default_callback;
@@ -627,7 +629,7 @@ int ASRHandler::cli_main(int argc, char **argv) {
                                 fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                                 return 10;
                             }
-                            printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
+                            printf("%s", sense_voice_print_output(ctx, params.need_prefix, false).c_str());
                             current_speech_end = current_speech_start = 0;
                             if (next_start < prev_end) {
                                 triggered = false;
@@ -641,7 +643,7 @@ int ASRHandler::cli_main(int argc, char **argv) {
                                 fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                                 return 10;
                             }
-                            printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
+                            printf("%s", sense_voice_print_output(ctx, params.need_prefix, false).c_str());
                             current_speech_end = current_speech_start = 0;
                             prev_end = next_start = temp_end = 0;
 
@@ -676,7 +678,7 @@ int ASRHandler::cli_main(int argc, char **argv) {
                                     fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                                     return 10;
                                 }
-                                printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
+                                printf("%s", sense_voice_print_output(ctx, params.need_prefix, false).c_str());
                                 current_speech_end = current_speech_start = 0;
                             }
                             prev_end = next_start = temp_end = 0;
@@ -697,7 +699,7 @@ int ASRHandler::cli_main(int argc, char **argv) {
                     fprintf(stderr, "%s: failed to process audio\n", argv[0]);
                     return 10;
                 }
-                printf(sense_voice_print_output(ctx, params.need_prefix, false).c_str());
+                printf("%s", sense_voice_print_output(ctx, params.need_prefix, false).c_str());
             }
         }
         SENSE_VOICE_LOG_INFO("\n%s: decoder audio use %f s, rtf is %f. \n\n",

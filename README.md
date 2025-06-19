@@ -2,6 +2,8 @@
 
 SenseVoice.cpp C++ 库，支持 Qt 接口和 Python Bindings。
 
+同时添加了对 OpenHarmony 平台的编译脚本支持（参见 `ohos-build.sh`）
+
 特别致谢：[lovemefan/SenseVoice.cpp](https://github.com/lovemefan/SenseVoice.cpp)
 
 项目遵循 MIT 许可证。
